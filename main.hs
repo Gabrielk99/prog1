@@ -53,21 +53,21 @@ menorSomaCord :: Ord a=> [a]-> a
 menorSomaCord xss = head (mergeSort xss)
 
 --DISTANCIA EUCLIDEANA--
-listdistEuc :: Floating a=> [a]->[a]->[a]
+listdistEuc :: [Double]->[Double]->[Double]
 listdistEuc [] [] = []
 listdistEuc (x:xs) (y:ys) = [(x-y)^2] ++ listdistEuc xs ys
 
-distEuc :: Floating a => [a]->[a]->a
+distEuc :: [Double]->[Double]->Double
 distEuc xs ys = sqrt (sum (listdistEuc xs ys))
 
 -- ordeno a lista e pego o ultimo, esse me garante que é a maior distancia possível do ponto que quero comparar --
-maiordistEuc :: (Floating a, Ord a) => [[a]] -> [a] -> a
+maiordistEuc :: [[Double]] -> [Double] -> Double
 maiordistEuc xss ys = distEuc (last(mergeSort xss)) ys
 
 -- Aqui vamos receber a lista ordenada de forma decrescente, 
 -- sabemos que o ponto mais distante ao centroide será o ponto com as maiores coordenadas
 -- Por que fazer isso? Quando encontrarmos um que já é diferente da maior distancia quer dizer que não tem mais nenhum
-pontosMaisDist :: (Eq t, Floating t) => [[t]]->t->[t]->[[t]]
+pontosMaisDist :: [[Double]]->Double->[Double]->[[Double]]
 pontosMaisDist [] maiorD ys = []
 pontosMaisDist (xs:xss) maiorD ys | maiorD == distEuc xs ys = [xs]++ pontosMaisDist xss maiorD ys
                                   | otherwise = []
@@ -75,7 +75,7 @@ pontosMaisDist (xs:xss) maiorD ys | maiorD == distEuc xs ys = [xs]++ pontosMaisD
 -- pego os pontos mais distantes tendo em consideração que estou mandando em ordem decrescente
 -- ordeno os pontos que recebi e retiro a cabeça, como ta em ordem crescente esse é com certeza o ponto com maior dist
 -- e menores primeiras cord
-pontoMaisDistMenorCord :: (Ord a,Floating a)=> [[a]]->[a]->[a]                           
+pontoMaisDistMenorCord ::  [[Double]]->[Double]->[Double]                           
 pontoMaisDistMenorCord xss ys = head(mergeSort(pontosMaisDist  (reverse (mergeSort xss)) (maiordistEuc xss ys) ys))
 --Aqui estou achando nosso centroide
 --centroide' é responsável por somar cordenadas por cordenadas
@@ -83,19 +83,19 @@ pontoMaisDistMenorCord xss ys = head(mergeSort(pontosMaisDist  (reverse (mergeSo
 --vamos sempre chamar centroide'' sendo xs trocado pelo centroide' de xs e ys
 --centroide3 é a função que vai chamar centroide'' dizendo que o ponto estatico é a cabeça e a lista de pontos é a cauda
 --centroide4 recebe a lista de pontos e retorna o centroide depois de todas as outras operações
-centroide' :: Floating a => [a]->[a]->[a]
+centroide' :: [Double]->[Double]->[Double]
 centroide' xs [] = []
 centroide' [] ys = []
 centroide' (x:xs) (y:ys) = [x+y]++centroide' xs ys
 
-centroide'' :: Floating a => [a]->[[a]] -> [a]
+centroide'' :: [Double]->[[Double]] -> [Double]
 centroide'' xs [] = xs
 centroide'' xs (ys:yss) = centroide'' (centroide' xs ys) yss  
 
-centroide3 :: Floating a => [[a]] -> [a]
+centroide3 :: [[Double]] -> [Double]
 centroide3 xss = centroide'' (head xss) (tail xss)
 
-centroide4 :: Floating a => [[a]] -> [a]
+centroide4 ::[[Double]] -> [Double]
 centroide4 xss = [x/(fromIntegral tam)| x<-xs]
                 where xs = centroide3 xss
                       tam = length xss
@@ -106,7 +106,7 @@ centroide4 xss = [x/(fromIntegral tam)| x<-xs]
 --verifico se k é maior que 0, caso seja chamo a função novamente
 -- com o novo valor de k = k-1 e mando a lista de pontos com menos o ponto mais distante do centroide 
 -- e mando a lista de centroides atualizada
-iniciarGrupos :: (Ord t, Ord a, Floating a, Num t) => t->[[a]]->[[a]]->[[a]]
+iniciarGrupos ::  (Ord t,Num t) => t->[[Double]]->[[Double]]->[[Double]]
 iniciarGrupos k [] yss = yss
 iniciarGrupos k xss yss | k > 0 = iniciarGrupos (k-1) (removeEle ptMDist xss ) (yss++[ptMDist])
                         | otherwise = yss
@@ -117,7 +117,7 @@ iniciarGrupos k xss yss | k > 0 = iniciarGrupos (k-1) (removeEle ptMDist xss ) (
 --chamo a função auxiliar com k-2 pois os dois primeiros pontos ja estão sendo passados
 --e mando a lista atualizada com menos os dois primeiros pontos
 -- K tem que ser necessáriamente maior que zero, se não retorna lista vazia
-kGruposForm :: (Ord t,Ord a,Floating a, Num t) => t->[[a]] -> [[a]]
+kGruposForm :: (Ord t, Num t) => t->[[Double]] -> [[Double]]
 kGruposForm 0 _ = []
 kGruposForm k xss = iniciarGrupos (k-1) (removeEle (menorSomaCord xss) xss) yss
                   where 
@@ -132,7 +132,7 @@ removeEle ys (xs:xss) | ys == xs = xss
 --CRIANDO OS GRUPOS KMEANS--
 
 --Acha a menor distancia do ponto aos centroides--
-minDistCent::(Ord t,Floating t)=> [t]->t->[[t]]->t
+minDistCent::[Double]->Double->[[Double]]->Double
 minDistCent _ min [] = min
 minDistCent xs min (ys:yss) | min > dist = minDistCent xs dist yss
                             | otherwise  = minDistCent xs min yss
@@ -142,7 +142,7 @@ minDistCent xs min (ys:yss) | min > dist = minDistCent xs dist yss
 --mandar os centroides ordenados em ordem crescente--
 --como os centroides tão em ordem crescente o primeiro que tiver a dist igual a minima é o centroide 
 --de menores primeiras cordenadas
-acharPtdeMenordist :: (Eq t, Floating t)=> [t]->t ->[[t]]->[t]
+acharPtdeMenordist ::  [Double]->Double ->[[Double]]->[Double]
 acharPtdeMenordist _ _ [] = []
 acharPtdeMenordist xs min (ys:yss)| distEuc xs ys == min = ys 
                                   | otherwise = acharPtdeMenordist xs min yss
@@ -155,14 +155,14 @@ criandoOsGrupos xss [] = []
 criandoOsGrupos xss (cs:centroides) = [[cs]++[snd xs| xs<-xss, (fst xs) == cs]] ++ criandoOsGrupos xss centroides
 
 --Aqui ocorre a atualização dos centroides--
-newCentroides :: Floating a=> [[[a]]]->[[a]]
+newCentroides :: [[[Double]]]->[[Double]]
 newCentroides grupos = [centroide4 xss | xss<-grupos ]
 
 --Onde eu crio as tuplas de (chave,conteudo)
 --pego o ponto, acho a menor distancia aos centroides
 --identifico de qual centroide é, esse é a chave
 --dai crio uma lista dessas tuplas
-comparePtCent :: (Floating t,Ord t)=>[[t]]->[[t]]->[([t],[t])]
+comparePtCent :: [[Double]]->[[Double]]->[([Double],[Double])]
 comparePtCent [] _= []
 comparePtCent (xs:xss) centroides = [(chave,xs)]++comparePtCent xss centroides
                                 where 
@@ -171,7 +171,7 @@ comparePtCent (xs:xss) centroides = [(chave,xs)]++comparePtCent xss centroides
 
 --Aqui é onde a magica acontece, as operações anteriores de criar tuplas, separar os grupos e recalcular centroides--
 --como estabelecido, comparamos se houve mudanças no grupo e se o lim é menor igual a 100
-sepOsGrupos :: (Floating t2,Ord t1, Ord t2,Num t1)=>[[t2]]->t1->[[t2]]->[[[t2]]]->[[[t2]]]
+sepOsGrupos :: (Ord t1,Num t1)=>[[Double]]->t1->[[Double]]->[[[Double]]]->[[[Double]]]
 sepOsGrupos xss lim centroidesAtt gruposAnt | lim <=100 && grupos /= gruposAnt = sepOsGrupos xss (lim+1) centroidesN grupos
                                             | otherwise = grupos
                                     where
@@ -181,7 +181,7 @@ sepOsGrupos xss lim centroidesAtt gruposAnt | lim <=100 && grupos /= gruposAnt =
 
 --Função para chamar a sepOsGrupos, auxiliar para ter um primeiro grupo de partida para poder comparar
 --Ela pega o primeirou grupo, calcula os novos centroides e manda para a função sepOsGrupos
-startKmeans :: (Floating t1,Ord t2,Ord t3,Ord t1,Num t2,Num t3)=>[[t1]]->t3->t2->[[[t1]]]
+startKmeans :: (Ord t2,Ord t3,Num t2,Num t3)=>[[Double]]->t3->t2->[[[Double]]]
 startKmeans xss k lim  = sepOsGrupos xss (lim+1) centroidesN grupos
                         where 
                             centroidesN = newCentroides grupos
@@ -190,7 +190,7 @@ startKmeans xss k lim  = sepOsGrupos xss (lim+1) centroidesN grupos
                             centroides = kGruposForm k xss
 
 --CALCULA O SSE--
-_SSE :: (Floating a,Ord t1,Ord t2,Ord a,Num t1,Num t2)=> [[a]]->t2->t1->a
+_SSE :: (Ord t1,Ord t2,Num t1,Num t2)=> [[Double]]->t2->t1->Double
 _SSE xss k lim = sum[(distEuc xs (centroide4 xss))^2|xss<-grupos,xs<-xss]
     where 
         grupos = startKmeans xss k lim
@@ -224,7 +224,7 @@ gerarSaida' xss (gss:grupos) = [gerarSaida'' tuplas gss]++gerarSaida' xss grupos
                         tuplas = geraTuplasIndice 1 xss
 
 --retorna todo o processo feito por gerarSaida' e gerarSaida''--
-gerarSaida :: (Floating t1,Ord a,Ord t2,Ord t3,Ord t1,Num t2,Num t3,Num a)=> [[t1]]->t3->t2->[[a]]
+gerarSaida :: (Ord a,Ord t2,Ord t3,Num t2,Num t3,Num a)=> [[Double]]->t3->t2->[[a]]
 gerarSaida xss k lim = geraList' saida
                     where 
                         grupos = startKmeans xss k lim
